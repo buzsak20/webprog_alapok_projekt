@@ -10,10 +10,11 @@
   <link href="https://fonts.googleapis.com" rel="preconnect"/>
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="./styles.css" />
-</head>
-<body>
-    <a class="sr-only" href="#main">
+    <link rel="stylesheet" href="./legacy_styles.css" />
+
+ </head>
+ <body>
+  <a class="sr-only" href="#main">
    Tartalomra ugrás
   </a>
   <div class="app-shell logged-out">
@@ -79,6 +80,319 @@
       </div>
      </div>
      <div class="topbar-right">
-        
-</body>
+
+      <button class="btn btn-secondary" id="loginToggle">
+       Bejelentkezés
+      </button>
+      <button class="btn btn-primary hidden" id="logoutBtn">
+       Kijelentkezés
+      </button>
+     </div>
+    </header>
+    <div class="container">
+     <section class="view welcome-wrap" id="view-welcome">
+      <div class="panel welcome-card">
+       <div class="welcome-stack">
+        <div>
+         <div class="eyebrow">
+          <h1>
+           Üdvözlünk a HardverInfó weboldalán!
+          </h1>
+         </div>
+         <p class="lead">
+          A szolgáltatás használatához kérlek jelentkezz be vagy ha még nincs fiókod regisztrálj!
+         </p>
+        </div>
+        <div class="welcome-actions">
+         <a class="btn btn-primary" href="#/auth/login">
+          Bejelentkezés
+         </a>
+         <a class="btn btn-secondary" href="#/auth/register">
+          Regisztráció
+         </a>
+        </div>
+       </div>
+      </div>
+     </section>
+     <section class="hero" id="dashboardHero">
+      <div class="panel hero-copy">
+       <span class="eyebrow">
+        Napló
+       </span>
+       <h1>
+        Bejegyzések kezelése.
+       </h1>
+       <p class="lead">
+        Statisztika a weboldalon közétett bejegyzéskeről az azok alá írt kommentkeről és a felhasználók számáról akik regisztáltak az oldalra.
+       </p>
+       <div class="button-row">
+        <a class="btn btn-primary" href="#/posts">
+         Bejegyzések megnyitása
+        </a>
+       </div>
+       <div class="stat-grid">
+        <div class="stat">
+         <span>
+          Bejegyzések
+         </span>
+         <strong id="postCount">
+          0
+         </strong>
+        </div>
+        <div class="stat">
+         <span>
+          Kommentek
+         </span>
+         <strong id="commentCount">
+          0
+         </strong>
+        </div>
+        <div class="stat">
+         <span>
+          Felhasználók
+         </span>
+         <strong id="userCount">
+          0
+         </strong>
+        </div>
+       </div>
+      </div>
+      <div class="panel hero-side">
+       <div class="welcome-stack">
+        <div>
+         <div class="eyebrow">
+          Készítő
+         </div>
+         <h2 style="font-size:var(--text-lg);margin-top:var(--space-2)">
+          Buzsák Norman
+         </h2>
+        </div>
+        <div class="chip-row">
+         <span class="chip">
+          Neptun kód: IVV2VH
+         </span>
+         <span class="chip">
+          Kurzus: WEBPRO-N-LA61
+         </span>
+        </div>
+       </div>
+      </div>
+     </section>
+     <section class="view hidden" id="view-posts">
+      <div class="section-head">
+       <div>
+        <h2>
+         Bejegyzéslista
+        </h2>
+        <p>
+         Szűrés kategória és keresés alapján.
+        </p>
+       </div>
+      </div>
+      <div class="search-row">
+       <input id="searchInput" placeholder="Keresés címben vagy szövegben" type="search"/>
+       <select id="categoryFilter">
+        <option value="all">
+         Minden kategória
+        </option>
+       </select>
+       <select id="authorFilter">
+        <option value="all">
+         Minden szerző
+        </option>
+       </select>
+      </div>
+      <div class="post-grid" id="postsGrid">
+      </div>
+     </section>
+     <section class="view hidden" id="view-detail">
+      <div class="layout-two">
+       <article class="panel article">
+        <span class="badge" id="detailCategory">
+        </span>
+        <h2 id="detailTitle">
+        </h2>
+        <div class="post-meta">
+         <span id="detailAuthor">
+         </span>
+         <span id="detailDate">
+         </span>
+         <span id="detailStatus">
+         </span>
+        </div>
+        <div class="article-body" id="detailBody">
+        </div>
+       </article>
+       <aside class="stack">
+        <section class="panel article">
+         <div class="section-head" style="margin-top:0">
+          <div>
+           <h2>
+            Kommentek
+           </h2>
+           <p>
+            Olvasók visszajelzései és hozzászólásai.
+           </p>
+          </div>
+         </div>
+         <div class="comment-list" id="commentList">
+         </div>
+        </section>
+        <section class="panel article">
+         <h2 style="font-size:var(--text-lg)">
+          Új komment
+         </h2>
+         <form class="stack" id="commentForm" style="margin-top:var(--space-4)">
+          <input name="author" placeholder="Név" required=""/>
+          <textarea name="content" placeholder="Írd le a véleményed" required="" rows="5"></textarea>
+          <button class="btn btn-primary" type="submit">
+           Komment küldése
+          </button>
+         </form>
+        </section>
+       </aside>
+      </div>
+     </section>
+     <section class="view hidden" id="view-auth">
+      <div class="panel article auth-box" style="max-width:720px;margin:0 auto">
+       <div>
+        <div class="eyebrow">
+         Autentikáció
+        </div>
+        <h2 id="authTitle" style="font-size:var(--text-lg);margin-top:var(--space-2)">
+         Bejelentkezés
+        </h2>
+        <p class="lead" id="authLead" style="margin-top:var(--space-3)">
+         A bejelentkezés felhasználónév és jelszó kombinációjával lehetséges.
+        </p>
+       </div>
+       <div class="button-row" id="authSwitch" style="margin-top:var(--space-4)">
+        <a class="btn btn-secondary" href="#/auth/login" id="authLoginBtn">
+         Bejelentkezés
+        </a>
+        <a class="btn btn-secondary" href="#/auth/register" id="authRegisterBtn">
+         Regisztráció
+        </a>
+       </div>
+       <form class="stack panel hidden" id="registerForm" style="padding:var(--space-4);margin-top:var(--space-4)">
+        <strong>
+         Regisztráció
+        </strong>
+        <input name="name" placeholder="Teljes név" required=""/>
+        <input name="username" placeholder="Felhasználónév" required=""/>
+        <input name="password" placeholder="Jelszó" required="" type="password"/>
+        <button class="btn btn-primary" type="submit">
+         Fiók létrehozása
+        </button>
+       </form>
+       <form class="stack panel hidden" id="loginForm" style="padding:var(--space-4);margin-top:var(--space-4)">
+        <strong>
+         Bejelentkezés
+        </strong>
+        <input name="username" placeholder="Felhasználónév" required=""/>
+        <input name="password" placeholder="Jelszó" required="" type="password"/>
+        <button class="btn btn-primary" type="submit">
+         Belépés
+        </button>
+       </form>
+       <div class="panel hidden" id="sessionPanel" style="padding:var(--space-4);margin-top:var(--space-4)">
+        <h2 style="font-size:var(--text-lg)">
+         Aktív munkamenet
+        </h2>
+        <div class="stack" id="sessionBox" style="margin-top:var(--space-4)">
+        </div>
+       </div>
+      </div>
+     </section>
+     <section class="view hidden" id="view-editor">
+      <div class="panel article editor-box">
+       <div class="section-head" style="margin-top:0">
+        <div>
+         <h2>
+          Saját bejegyzés létrehozása
+         </h2>
+         <p>
+          Csak bejelentkezett felhasználó számára engedélyezett.
+         </p>
+        </div>
+       </div>
+       <div id="editorGate">
+       </div>
+       <form class="stack" id="postForm">
+        <div class="grid-2">
+         <input name="title" placeholder="Bejegyzés címe" required=""/>
+         <select name="category" required="">
+          <option value="">
+           Kategória választása
+          </option>
+          <option>
+           Alaplap
+          </option>
+          <option>
+           Processzor
+          </option>
+          Videókártya
+          <option>
+           RAM
+          </option>
+          <option>
+           SSD
+          </option>
+         </select>
+        </div>
+        <textarea name="content" placeholder="Bejegyzés teljes szövege, bekezdéseket üres sorral válaszd el" required="" rows="10"></textarea>
+        <div class="button-row" style="margin-top:0">
+         <button class="btn btn-primary" type="submit">
+          Mentés
+         </button>
+         <button class="btn btn-secondary" type="reset">
+          Űrlap törlése
+         </button>
+        </div>
+       </form>
+       <div>
+        <h2 style="font-size:var(--text-lg);margin-bottom:var(--space-3)">
+         Saját bejegyzések
+        </h2>
+        <p class="muted" style="margin-bottom:var(--space-3)">
+         Itt jelennek meg az általad korábban létrehozott bejegyzések.
+        </p>
+        <div id="myPosts">
+        </div>
+       </div>
+      </div>
+     </section>
+     <section class="view hidden" id="view-admin">
+      <div class="layout-two">
+       <div class="panel article">
+        <h2 style="font-size:var(--text-lg)">
+         Bejegyzések moderálása
+        </h2>
+        <div class="admin-list" id="adminPosts" style="margin-top:var(--space-4)">
+        </div>
+       </div>
+       <div class="panel article">
+        <h2 style="font-size:var(--text-lg)">
+         Kommentek moderálása
+        </h2>
+        <div class="admin-list" id="adminComments" style="margin-top:var(--space-4)">
+        </div>
+       </div>
+      </div>
+      <div class="panel article" style="margin-top:var(--space-6)">
+       <h2 style="font-size:var(--text-lg)">
+        Felhasználói jogosultságok
+       </h2>
+       <div class="admin-list" id="adminUsers" style="margin-top:var(--space-4)">
+       </div>
+      </div>
+     </section>
+    </div>
+   </main>
+  </div>
+  <div aria-atomic="true" aria-live="polite" class="toast-wrap" id="toastWrap">
+  </div>
+    <script src="./legacy_app.js"></script>
+
+ </body>
 </html>
