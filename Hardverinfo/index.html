@@ -13,6 +13,72 @@
     <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-    
+    <a class="sr-only" href="#main">
+   Tartalomra ugrás
+  </a>
+  <div class="app-shell logged-out">
+   <aside class="sidebar" id="sidebar">
+    <div class="brand">
+     <div aria-hidden="true" class="brand-logo">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+       <path d="M5 6.5C5 5.12 6.12 4 7.5 4h9A2.5 2.5 0 0 1 19 6.5v11A2.5 2.5 0 0 1 16.5 20h-9A2.5 2.5 0 0 1 5 17.5z">
+       </path>
+       <path d="M9 8h6">
+       </path>
+       <path d="M9 12h6">
+       </path>
+       <path d="M9 16h3">
+       </path>
+      </svg>
+     </div>
+     <div class="brand-copy">
+      <strong>
+       HardverInfo
+      </strong>
+     </div>
+    </div>
+    <nav aria-label="Elsődleges navigáció" class="nav">
+     <a data-public-nav="" data-route="welcome" href="#/welcome">
+      Üdvözlő oldal
+      <span>
+       →
+      </span>
+     </a>
+     <a data-route="posts" href="#/posts">
+      Bejegyzések
+      <span>
+       →
+      </span>
+     </a>
+     <a data-route="new" href="#/new">
+      Új bejegyzés
+      <span>
+       +
+      </span>
+     </a>
+     <a class="hidden" data-admin-nav="" data-route="admin" href="#/admin">
+      Admin
+      <span>
+       ⚑
+      </span>
+     </a>
+    </nav>
+   </aside>
+   <main class="main" id="main">
+    <header class="topbar">
+     <div class="topbar-left">
+      <button aria-label="Menü megnyitása" class="btn btn-secondary mobile-menu" id="menuBtn">
+       ☰
+      </button>
+      <div>
+       <div class="muted" id="topbarSubtitle">
+       </div>
+       <strong id="pageTitle">
+        Üdvözlő oldal
+       </strong>
+      </div>
+     </div>
+     <div class="topbar-right">
+        
 </body>
 </html>
