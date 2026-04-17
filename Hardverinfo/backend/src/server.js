@@ -15,6 +15,32 @@ const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || '*';
 app.use(cors({ origin: CLIENT_ORIGIN }));
 app.use(express.json());
 
+async function ensureDefaultAdmin() {
+  const username = 'buzsak';
+  const password = 'admin';
+  const name = 'Buzsák Adminisztrátor';
+
+  const existingAdmin = await prisma.user.findUnique({ where: { username } });
+  if (existingAdmin) {
+    if (existingAdmin.role !== 'admin') {
+      await prisma.user.update({ where: { username }, data: { role: 'admin' } });
+    }
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  await prisma.user.create({
+    data: { name, username, password: passwordHash, role: 'admin' }
+  });
+}
+
+function requireAdmin(req, res, next) {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin jogosultság szükséges.' });
+  }
+  next();
+}
+
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'A backend szerver elindult.' });
 });
@@ -22,7 +48,7 @@ app.get('/health', (req, res) => {
 app.get('/api', (req, res) => {
   res.status(200).json({
     name: 'HardverInfo API',
-    version: 'stage-3',
+    version: 'stage-6',
     endpoints: [
       'GET /health',
       'GET /api',
@@ -33,7 +59,9 @@ app.get('/api', (req, res) => {
       'POST /posts',
       'PATCH /posts/:id',
       'DELETE /posts/:id',
-      'POST /posts/:id/comments'
+      'POST /posts/:id/comments',
+      'PATCH /comments/:id',
+      'GET /admin/overview'
     ]
   });
 });
@@ -52,12 +80,7 @@ app.post('/auth/register', async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: {
-        name,
-        username,
-        password: passwordHash,
-        role: 'felhasznalo'
-      }
+      data: { name, username, password: passwordHash, role: 'felhasznalo' }
     });
 
     const token = createToken(user);
@@ -100,7 +123,10 @@ app.post('/auth/login', async (req, res) => {
 app.get('/posts', async (req, res) => {
   try {
     const posts = await prisma.post.findMany({
-      include: { user: true, comments: true },
+      include: {
+        user: true,
+        comments: { include: { user: true }, orderBy: { createdAt: 'desc' } }
+      },
       orderBy: { createdAt: 'desc' }
     });
     return res.status(200).json(posts);
@@ -114,7 +140,10 @@ app.get('/posts/:id', async (req, res) => {
     const id = Number(req.params.id);
     const post = await prisma.post.findUnique({
       where: { id },
-      include: { user: true, comments: true }
+      include: {
+        user: true,
+        comments: { include: { user: true }, orderBy: { createdAt: 'desc' } }
+      }
     });
 
     if (!post) {
@@ -220,7 +249,7 @@ app.post('/posts/:id/comments', async (req, res) => {
         userId: userId ?? null,
         guestName: guestName ?? null,
         content,
-        status: 'approved'
+        status: 'pending'
       }
     });
 
@@ -230,6 +259,52 @@ app.post('/posts/:id/comments', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`HardverInfo backend fut a ${PORT} porton`);
+app.patch('/comments/:id', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { status } = req.body;
+
+    if (!['pending', 'approved'].includes(status)) {
+      return res.status(400).json({ message: 'Érvénytelen komment státusz.' });
+    }
+
+    const existing = await prisma.comment.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ message: 'A komment nem található.' });
+    }
+
+    const updated = await prisma.comment.update({
+      where: { id },
+      data: { status }
+    });
+
+    return res.status(200).json(updated);
+  } catch {
+    return res.status(500).json({ message: 'Nem sikerült módosítani a kommentet.' });
+  }
 });
+
+app.get('/admin/overview', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const posts = await prisma.post.findMany({ include: { user: true }, orderBy: { createdAt: 'desc' } });
+    const comments = await prisma.comment.findMany({ include: { post: true, user: true }, orderBy: { createdAt: 'desc' } });
+    const users = await prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
+    return res.status(200).json({ posts, comments, users });
+  } catch {
+    return res.status(500).json({ message: 'Nem sikerült betölteni az admin adatokat.' });
+  }
+});
+
+async function start() {
+  try {
+    await ensureDefaultAdmin();
+    app.listen(PORT, () => {
+      console.log(`HardverInfo backend fut a ${PORT} porton`);
+    });
+  } catch (error) {
+    console.error('Nem sikerült elindítani a szervert:', error);
+    process.exit(1);
+  }
+}
+
+start();
