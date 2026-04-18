@@ -223,8 +223,8 @@ function renderDetail() {
             <div class="muted">Státusz: ${comment.status || 'approved'}</div>
             ${isAdmin ? `
               <div class="button-row" style="margin-top: var(--space-3)">
-                <button class="btn btn-secondary" data-comment-status="pending" data-comment-id="${comment.id}">Pending</button>
-                <button class="btn btn-primary" data-comment-status="approved" data-comment-id="${comment.id}">Approve</button>
+                <button class="btn btn-secondary" data-comment-status="pending" data-comment-id="${comment.id}">Függőben</button>
+                <button class="btn btn-primary" data-comment-status="approved" data-comment-id="${comment.id}">Jóváhagy</button>
               </div>
             ` : ''}
           </div>
@@ -331,8 +331,8 @@ function renderAdmin() {
             <p>${comment.content}</p>
             <div class="muted">Bejegyzés: ${comment.post?.title || 'Ismeretlen'}</div>
             <div class="button-row" style="margin-top: var(--space-3)">
-              <button class="btn btn-secondary" data-comment-status="pending" data-comment-id="${comment.id}">Pending</button>
-              <button class="btn btn-primary" data-comment-status="approved" data-comment-id="${comment.id}">Approve</button>
+              <button class="btn btn-secondary" data-comment-status="pending" data-comment-id="${comment.id}">Függőben</button>
+              <button class="btn btn-primary" data-comment-status="approved" data-comment-id="${comment.id}">Jóváhagy</button>
             </div>
           </div>
         `).join('')
@@ -637,6 +637,9 @@ if (postForm) {
 }
 
 if (commentForm) {
+  const authorInput = commentForm.querySelector('[name="author"]');
+  if (authorInput) authorInput.remove();
+
   commentForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!state.selectedPostId) {
@@ -646,9 +649,8 @@ if (commentForm) {
     const fd = new FormData(commentForm);
     try {
       await createComment(state.selectedPostId, {
-        author: fd.get('author'),
-        guestName: fd.get('author'),
-        content: fd.get('content')
+        content: fd.get('content'),
+        userId: state.user?.id ?? null
       });
       commentForm.reset();
       showToast('Komment elküldve. Moderátori jóváhagyás után jelenik meg.');

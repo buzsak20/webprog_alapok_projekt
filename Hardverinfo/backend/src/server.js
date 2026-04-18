@@ -18,7 +18,7 @@ app.use(express.json());
 async function ensureDefaultAdmin() {
   const username = 'buzsak';
   const password = 'admin';
-  const name = 'Buzsák Adminisztrátor';
+  const name = 'Buzsák Norman';
 
   const existingAdmin = await prisma.user.findUnique({ where: { username } });
   if (existingAdmin) {
