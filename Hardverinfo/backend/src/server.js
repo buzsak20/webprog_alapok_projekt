@@ -61,7 +61,8 @@ app.get('/api', (req, res) => {
       'DELETE /posts/:id',
       'POST /posts/:id/comments',
       'PATCH /comments/:id',
-      'GET /admin/overview'
+      'GET /admin/overview',
+      'DELETE /users/:id'
     ]
   });
 });
@@ -292,6 +293,33 @@ app.get('/admin/overview', authenticate, requireAdmin, async (req, res) => {
     return res.status(200).json({ posts, comments, users });
   } catch {
     return res.status(500).json({ message: 'Nem sikerült betölteni az admin adatokat.' });
+  }
+});
+
+app.delete('/users/:id', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const existing = await prisma.user.findUnique({ where: { id } });
+
+    if (!existing) {
+      return res.status(404).json({ message: 'A felhasználó nem található.' });
+    }
+
+    if (existing.id === req.user.id) {
+      return res.status(400).json({ message: 'Saját felhasználót nem törölhetsz.' });
+    }
+
+    if (existing.username === 'buzsak') {
+      return res.status(400).json({ message: 'Az alapértelmezett admin felhasználó nem törölhető.' });
+    }
+
+    await prisma.comment.deleteMany({ where: { userId: id } });
+    await prisma.post.deleteMany({ where: { userId: id } });
+    await prisma.user.delete({ where: { id } });
+
+    return res.status(200).json({ message: 'Felhasználó törölve.' });
+  } catch {
+    return res.status(500).json({ message: 'Nem sikerült törölni a felhasználót.' });
   }
 });
 

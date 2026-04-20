@@ -44,6 +44,9 @@ const adminPosts = s('#adminPosts');
 const adminComments = s('#adminComments');
 const adminUsers = s('#adminUsers');
 const dashboardHero = s('#dashboardHero');
+const searchInput = s('#searchInput');
+const categoryFilter = s('#categoryFilter');
+const authorFilter = s('#authorFilter');
 
 function saveSession() {
   localStorage.setItem('hardverinfo_token', state.token || '');
@@ -76,6 +79,12 @@ function showToast(message) {
 function fmtDate(value) {
   if (!value) return '';
   return new Date(value).toLocaleString('hu-HU');
+}
+
+function formatPostStatus(status) {
+  if (status === 'hidden') return 'Elrejtve';
+  if (status === 'published') return 'Publikált';
+  return status || '';
 }
 
 function routeTo(hash) {
@@ -116,6 +125,7 @@ async function fetchPosts() {
     const res = await fetch(`${API_BASE}/posts`);
     const data = await res.json();
     state.posts = Array.isArray(data) ? data : [];
+    populatePostFilters();
     renderStats();
     renderPosts();
     renderMyPosts();
@@ -141,6 +151,46 @@ async function fetchAdminOverview() {
   }
 }
 
+function normalizeText(value) {
+  return String(value || '').toLocaleLowerCase('hu-HU').trim();
+}
+
+function populatePostFilters() {
+  if (categoryFilter) {
+    const categories = [...new Set(state.posts.map(post => post.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'hu'));
+    const current = categoryFilter.value || 'all';
+    categoryFilter.innerHTML = `<option value="all">Minden kategória</option>${categories
+      .map(category => `<option value="${category}">${category}</option>`)
+      .join('')}`;
+    categoryFilter.value = categories.includes(current) || current === 'all' ? current : 'all';
+  }
+
+  if (authorFilter) {
+    const authors = [...new Set(state.posts.map(post => post.user?.name).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'hu'));
+    const current = authorFilter.value || 'all';
+    authorFilter.innerHTML = `<option value="all">Minden szerző</option>${authors
+      .map(author => `<option value="${author}">${author}</option>`)
+      .join('')}`;
+    authorFilter.value = authors.includes(current) || current === 'all' ? current : 'all';
+  }
+}
+
+function getFilteredPosts() {
+  const searchTerm = normalizeText(searchInput?.value);
+  const selectedCategory = categoryFilter?.value || 'all';
+  const selectedAuthor = authorFilter?.value || 'all';
+
+  return state.posts
+    .filter(post => post.status !== 'hidden' || state.user?.role === 'admin')
+    .filter(post => selectedCategory === 'all' || post.category === selectedCategory)
+    .filter(post => selectedAuthor === 'all' || post.user?.name === selectedAuthor)
+    .filter(post => {
+      if (!searchTerm) return true;
+      const haystack = normalizeText(`${post.title} ${post.excerpt} ${post.content} ${post.category} ${post.user?.name}`);
+      return haystack.includes(searchTerm);
+    });
+}
+
 function renderStats() {
   if (postCount) postCount.textContent = state.posts.length;
   if (commentCount) {
@@ -154,10 +204,10 @@ function renderStats() {
 function renderPosts() {
   if (!postsGrid) return;
 
-  const visiblePosts = state.posts.filter(post => post.status !== 'hidden' || state.user?.role === 'admin');
+  const visiblePosts = getFilteredPosts();
 
   if (!visiblePosts.length) {
-    postsGrid.innerHTML = '<div class="panel empty">Nincs elérhető bejegyzés.</div>';
+    postsGrid.innerHTML = '<div class="panel empty">Nincs a szűrésnek megfelelő bejegyzés.</div>';
     return;
   }
 
@@ -174,7 +224,7 @@ function renderPosts() {
         <p>${post.excerpt || ''}</p>
         <div class="post-actions">
           <button class="btn btn-primary" data-open-post="${post.id}">Olvasd</button>
-          <span class="muted">${post.status || 'published'}</span>
+          <span class="muted">${formatPostStatus(post.status || 'published')}</span>
         </div>
       </article>
     `)
@@ -203,7 +253,7 @@ function renderDetail() {
   if (detailTitle) detailTitle.textContent = post.title || '';
   if (detailAuthor) detailAuthor.textContent = post.user?.name || 'Ismeretlen szerző';
   if (detailDate) detailDate.textContent = fmtDate(post.createdAt);
-  if (detailStatus) detailStatus.textContent = post.status || 'published';
+  if (detailStatus) detailStatus.textContent = formatPostStatus(post.status || 'published');
   if (detailBody) {
     detailBody.innerHTML = (post.content || '').split(',').map(p => `<p>${p.trim()}</p>`).join('');
   }
@@ -220,7 +270,7 @@ function renderDetail() {
               <time>${fmtDate(comment.createdAt)}</time>
             </div>
             <p>${comment.content}</p>
-            <div class="muted">Státusz: ${comment.status || 'approved'}</div>
+            <div class="muted">Státusz: ${comment.status === 'pending' ? 'Függőben' : 'Jóváhagyva'}</div>
             ${isAdmin ? `
               <div class="button-row" style="margin-top: var(--space-3)">
                 <button class="btn btn-secondary" data-comment-status="pending" data-comment-id="${comment.id}">Függőben</button>
@@ -307,7 +357,7 @@ function renderAdmin() {
           <div class="moderation-item">
             <div class="comment-head">
               <strong>${post.title}</strong>
-              <span class="muted">${post.status}</span>
+              <span class="muted">${formatPostStatus(post.status)}</span>
             </div>
             <p>${post.user?.name || 'Ismeretlen szerző'} · ${fmtDate(post.createdAt)}</p>
             <div class="button-row" style="margin-top: var(--space-3)">
@@ -349,6 +399,7 @@ function renderAdmin() {
               <th>Felhasználónév</th>
               <th>Szerepkör</th>
               <th>Létrehozva</th>
+              <th>Művelet</th>
             </tr>
           </thead>
           <tbody>
@@ -358,6 +409,13 @@ function renderAdmin() {
                 <td>${user.username}</td>
                 <td>${user.role}</td>
                 <td>${fmtDate(user.createdAt)}</td>
+                <td>
+                  <button
+                    class="btn btn-secondary"
+                    data-delete-user="${user.id}"
+                    ${user.username === 'buzsak' || Number(user.id) === Number(state.user?.id) ? 'disabled' : ''}
+                  >Törlés</button>
+                </td>
               </tr>
             `).join('')}
           </tbody>
@@ -458,6 +516,17 @@ async function updateCommentStatus(commentId, status) {
   return data;
 }
 
+async function deleteUser(userId) {
+  const res = await fetch(`${API_BASE}/users/${userId}`, {
+    method: 'DELETE',
+    headers: authHeaders()
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Nem sikerült törölni a felhasználót.');
+  return data;
+}
+
 function bindAdminButtons() {
   sa('[data-post-status]').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -483,6 +552,20 @@ function bindAdminButtons() {
           state.selectedPostId = null;
           routeTo('/posts');
         }
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
+  });
+
+  sa('[data-delete-user]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (btn.disabled) return;
+      try {
+        await deleteUser(btn.dataset.deleteUser);
+        showToast('Felhasználó törölve.');
+        await fetchPosts();
+        await fetchAdminOverview();
       } catch (err) {
         showToast(err.message);
       }
@@ -661,6 +744,11 @@ if (commentForm) {
     }
   });
 }
+
+
+if (searchInput) searchInput.addEventListener('input', renderPosts);
+if (categoryFilter) categoryFilter.addEventListener('change', renderPosts);
+if (authorFilter) authorFilter.addEventListener('change', renderPosts);
 
 window.addEventListener('hashchange', handleRoute);
 window.addEventListener('load', async () => {
