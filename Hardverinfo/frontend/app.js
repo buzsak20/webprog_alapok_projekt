@@ -87,6 +87,12 @@ function formatPostStatus(status) {
   return status || '';
 }
 
+function formatCommentStatus(status) {
+  if (status === 'pending') return 'Függőben';
+  if (status === 'approved') return 'Jóváhagyott';
+  return status || '';
+}
+
 function routeTo(hash) {
   location.hash = hash;
 }
@@ -376,7 +382,7 @@ function renderAdmin() {
           <div class="moderation-item">
             <div class="comment-head">
               <strong>${comment.user?.name || comment.guestName || 'Olvasó'}</strong>
-              <span class="muted">${comment.status}</span>
+              <span class="muted">${formatCommentStatus(comment.status)}</span>
             </div>
             <p>${comment.content}</p>
             <div class="muted">Bejegyzés: ${comment.post?.title || 'Ismeretlen'}</div>
