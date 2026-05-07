@@ -39,7 +39,7 @@ model Comment {
   userId    Int?
   guestName String?
   content   String
-  status    String    @default("approved")
+  status    String    @default("pending")
   createdAt DateTime  @default(now())
   post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
   user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
